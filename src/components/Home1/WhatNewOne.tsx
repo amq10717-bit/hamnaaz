@@ -12,13 +12,19 @@ interface Props {
 }
 
 const WhatNewOne: React.FC<Props> = ({ data, start, limit }) => {
-    const [activeTab, setActiveTab] = useState<string>('t-shirt');
+    const [activeTab, setActiveTab] = useState<string>('Lawn');
 
     const handleTabClick = (type: string) => {
         setActiveTab(type);
     };
 
-    const filteredProducts = data.filter((product) => product.type === activeTab && (product.category === 'fashion'));
+    const filteredProducts = data.filter((product) => {
+        const lowerTab = activeTab.toLowerCase();
+        const inTitle = product.name?.toLowerCase().includes(lowerTab);
+        // Safely check tags array to bypass TypeScript interface limits
+        const inTags = (product as any).tags?.some((tag: string) => tag.toLowerCase().includes(lowerTab));
+        return inTitle || inTags;
+    });
 
     return (
         <>
@@ -26,15 +32,15 @@ const WhatNewOne: React.FC<Props> = ({ data, start, limit }) => {
                 <div className="container">
                     <div className="heading flex flex-col items-center text-center">
                         <div className="heading3">What{String.raw`'s`} new</div>
-                        <div className="menu-tab flex items-center gap-2 p-1 bg-surface rounded-2xl mt-6">
-                            {['top', 't-shirt', 'dress', 'sets', 'shirt'].map((type) => (
+                        <div className="menu-tab flex items-center gap-2 p-1 bg-surface rounded-2xl mt-6 flex-wrap justify-center">
+                            {['Lawn', 'Linen', 'Khaddar', 'Dhanak'].map((type) => (
                                 <div
                                     key={type}
                                     className={`tab-item relative text-secondary text-button-uppercase py-2 px-5 cursor-pointer duration-500 hover:text-black ${activeTab === type ? 'active' : ''}`}
                                     onClick={() => handleTabClick(type)}
                                 >
                                     {activeTab === type && (
-                                        <motion.div layoutId='active-pill' className='absolute inset-0 rounded-2xl bg-white'></motion.div>
+                                        <motion.div layoutId='active-pill' className='absolute inset-0 rounded-2xl bg-white box-shadow-sm'></motion.div>
                                     )}
                                     <span className='relative text-button-uppercase z-[1]'>
                                         {type}
@@ -45,9 +51,15 @@ const WhatNewOne: React.FC<Props> = ({ data, start, limit }) => {
                     </div>
 
                     <div className="list-product hide-product-sold grid lg:grid-cols-4 grid-cols-2 sm:gap-[30px] gap-[20px] md:mt-10 mt-6">
-                        {filteredProducts.slice(start, limit).map((prd, index) => (
-                            <Product data={prd} type='grid' key={index} style='style-1' />
-                        ))}
+                        {filteredProducts.length === 0 ? (
+                            <div className="col-span-full text-center text-secondary py-10">
+                                No {activeTab} products found.
+                            </div>
+                        ) : (
+                            filteredProducts.slice(start, limit).map((prd, index) => (
+                                <Product data={prd} type='grid' key={index} style='style-1' />
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

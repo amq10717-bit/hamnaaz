@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
+// @ts-ignore
 import 'swiper/css/bundle';
 import Product from '../Product/Product'
 import { ProductType } from '@/type/ProductType'
@@ -15,29 +16,21 @@ interface Props {
 }
 
 const TabFeatures: React.FC<Props> = ({ data, start, limit }) => {
-    const [activeTab, setActiveTab] = useState<string>('on sale')
+    const [activeTab, setActiveTab] = useState<string>('Lawn')
 
     const handleTabClick = (item: string) => {
         setActiveTab(item)
     }
 
     const getFilterData = () => {
-        if (activeTab === 'on sale') {
-            return data.filter((product) => product.sale && (product.category === 'fashion'))
-        }
+        const lowerTab = activeTab.toLowerCase();
 
-        if (activeTab === 'new arrivals') {
-            return data.filter((product) => product.new && (product.category === 'fashion'))
-        }
-
-        if (activeTab === 'best sellers') {
-            return data
-                .filter((product) => product.category === 'fashion')
-                .slice()
-                .sort((a, b) => b.sold - a.sold)
-        }
-
-        return data
+        return data.filter((product) => {
+            const inTitle = product.name?.toLowerCase().includes(lowerTab);
+            // Tell TypeScript to temporarily ignore strict typing for the custom tags array
+            const inTags = (product as any).tags?.some((tag: string) => tag.toLowerCase().includes(lowerTab));
+            return inTitle || inTags;
+        });
     }
 
     const filteredProducts = getFilterData()
@@ -47,15 +40,15 @@ const TabFeatures: React.FC<Props> = ({ data, start, limit }) => {
             <div className="tab-features-block md:pt-20 pt-10">
                 <div className="container">
                     <div className="heading flex flex-col items-center text-center">
-                        <div className="menu-tab flex items-center gap-2 p-1 bg-surface rounded-2xl">
-                            {['best sellers', 'on sale', 'new arrivals'].map((item, index) => (
+                        <div className="menu-tab flex items-center gap-2 p-1 bg-surface rounded-2xl flex-wrap justify-center">
+                            {['Lawn', 'Linen', 'Khaddar', 'Dhanak'].map((item, index) => (
                                 <div
                                     key={index}
                                     className={`tab-item relative text-secondary heading5 py-2 px-5 cursor-pointer duration-500 hover:text-black ${activeTab === item ? 'active' : ''}`}
                                     onClick={() => handleTabClick(item)}
                                 >
                                     {activeTab === item && (
-                                        <motion.div layoutId='active-pill' className='absolute inset-0 rounded-2xl bg-white'></motion.div>
+                                        <motion.div layoutId='active-pill' className='absolute inset-0 rounded-2xl bg-white box-shadow-sm'></motion.div>
                                     )}
                                     <span className='relative heading5 z-[1]'>
                                         {item}
@@ -66,33 +59,29 @@ const TabFeatures: React.FC<Props> = ({ data, start, limit }) => {
                     </div>
 
                     <div className="list-product hide-product-sold section-swiper-navigation style-outline style-border md:mt-10 mt-6">
-                        <Swiper
-                            spaceBetween={12}
-                            slidesPerView={2}
-                            navigation
-                            loop={true}
-                            modules={[Navigation, Autoplay]}
-                            breakpoints={{
-                                576: {
-                                    slidesPerView: 2,
-                                    spaceBetween: 12,
-                                },
-                                768: {
-                                    slidesPerView: 3,
-                                    spaceBetween: 20,
-                                },
-                                1200: {
-                                    slidesPerView: 4,
-                                    spaceBetween: 30,
-                                },
-                            }}
-                        >
-                            {filteredProducts.slice(start, limit).map((prd, index) => (
-                                <SwiperSlide key={index}>
-                                    <Product data={prd} type='grid' />
-                                </SwiperSlide>
-                            ))}
-                        </Swiper>
+                        {filteredProducts.length === 0 ? (
+                            <p className="text-center text-secondary py-10">No {activeTab} products found in your catalog.</p>
+                        ) : (
+                            <Swiper
+                                spaceBetween={12}
+                                slidesPerView={2}
+                                navigation
+                                loop={filteredProducts.length > 4}
+                                modules={[Navigation, Autoplay]}
+                                breakpoints={{
+                                    576: { slidesPerView: 2, spaceBetween: 12 },
+                                    768: { slidesPerView: 3, spaceBetween: 20 },
+                                    1200: { slidesPerView: 4, spaceBetween: 30 },
+                                }}
+                            >
+                                {filteredProducts.slice(start, limit).map((prd, index) => (
+                                    <SwiperSlide key={index}>
+                                        {/* Added the required style='style-1' prop here */}
+                                        <Product data={prd} type='grid' style='style-1' />
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                        )}
                     </div>
                 </div>
             </div>
